@@ -5,11 +5,11 @@ A full-stack web application to explore 5,800+ confirmed exoplanets from the NAS
 ## 🖼️ Screenshots
 
 ### All planets (search, filters, sorting)
-![Planets list](screenshots/planets.png)
+![Planets list](screenshots/planets.png.png)
 
 ### Planet detail (Earth comparison, 3D visual, discovery method)
-![Planet detail 1](screenshots/detail1.png)
-![Planet detail 2](screenshots/detail2.png)
+![Planet detail 1](screenshots/detail1.png.png)
+![Planet detail 2](screenshots/detail2.png.png)
 
 ## ✨ Features
 
