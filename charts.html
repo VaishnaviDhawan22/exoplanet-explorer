@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Discovery Charts</h2>
+
+<div class="row mt-4">
+  <div class="col-lg-7 mb-4">
+    <h5>Planets discovered per year</h5>
+    <canvas id="yearChart"></canvas>
+  </div>
+  <div class="col-lg-5 mb-4">
+    <h5>Discovery methods</h5>
+    <canvas id="methodChart"></canvas>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+  const years = {{ years|tojson }};
+  const yearCounts = {{ year_counts|tojson }};
+  const methods = {{ methods|tojson }};
+  const methodCounts = {{ method_counts|tojson }};
+
+  new Chart(document.getElementById("yearChart"), {
+    type: "bar",
+    data: {
+      labels: years,
+      datasets: [{ label: "Planets discovered", data: yearCounts, backgroundColor: "#0d6efd" }]
+    }
+  });
+
+  new Chart(document.getElementById("methodChart"), {
+    type: "doughnut",
+    data: {
+      labels: methods,
+      datasets: [{
+        data: methodCounts,
+        backgroundColor: ["#0d6efd","#198754","#ffc107","#dc3545","#6f42c1","#20c997",
+                          "#fd7e14","#0dcaf0","#d63384","#6c757d","#adb5bd","#343a40"]
+      }]
+    }
+  });
+</script>
+{% endblock %}

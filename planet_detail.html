@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block content %}
+<a href="/planets" class="text-info">« Back to all planets</a>
+
+<h2 class="mt-3">{{ planet.name }}</h2>
+<p class="text-secondary">
+  Orbits star <b>{{ planet.host_star }}</b> |
+  Discovered in <b>{{ planet.discovery_year or 'unknown' }}</b> by <b>{{ planet.method }}</b> method |
+  Distance: <b>{{ distance_ly or 'unknown' }}</b> light years
+</p>
+
+{% if distance_ly %}
+<p>🛰️ At Voyager 1's speed (17 km/s), it would take about <b>{{ "{:,}".format(voyager_years) }}</b> years to get there.</p>
+{% endif %}
+
+<div class="alert alert-secondary">
+  <b>🔭 Discovery method: {{ planet.method }}</b><br>
+  {{ method_info }}
+</div>
+
+<h5>Size comparison (left: Earth, right: this planet)</h5>
+<div id="planet3d" style="width:100%; height:320px;"></div>
+<p class="text-secondary small" id="planetCaption"></p>
+
+<h5 class="mt-4">Habitability score</h5>
+{% if planet.habitability_score is not none %}
+<h3>{{ planet.habitability_score }} / 100</h3>
+<div class="progress mb-4" style="height: 25px;">
+  <div class="progress-bar bg-success" style="width: {{ planet.habitability_score }}%"></div>
+</div>
+{% else %}
+<p class="text-secondary">Score not available (size or temperature data missing).</p>
+{% endif %}
+
+<h5>Comparison with Earth</h5>
+<table class="table table-dark table-striped">
+  <tr><th>Property</th><th>This planet</th><th>Earth</th><th>Times Earth</th></tr>
+  {% for r in rows %}
+  <tr>
+    <td>{{ r.label }}</td>
+    <td>{{ r.value|round(2) if r.value is not none else 'No data' }}</td>
+    <td>{{ r.earth }}</td>
+    <td>{{ r.ratio ~ 'x' if r.ratio is not none else '-' }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+<div class="mt-4">
+{% if current_user %}
+  <form method="post" action="{{ url_for('toggle_favorite', planet_id=planet.id) }}">
+    {% if fav %}
+      <button class="btn btn-outline-danger">💔 Remove from favorites</button>
+    {% else %}
+      <button class="btn btn-warning">⭐ Add to favorites</button>
+    {% endif %}
+  </form>
+  {% if fav %}
+  <form method="post" action="{{ url_for('save_note', planet_id=planet.id) }}" class="mt-3">
+    <label class="mb-1">My notes</label>
+    <textarea name="note" class="form-control mb-2" rows="3">{{ fav.note or '' }}</textarea>
+    <button class="btn btn-primary">Save note</button>
+  </form>
+  {% endif %}
+{% else %}
+  <p><a class="text-info" href="/login">Log in</a> to save this planet and add notes.</p>
+{% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
+<script>
+  const radius = {{ planet.radius_earth|tojson }} || 1;
+  const temp = {{ planet.temperature|tojson }};
+
+  function colorFor(t) {
+    if (t === null) return 0x8899aa;
+    if (t < 200) return 0xbfe3ff;
+    if (t < 273) return 0x7fb2e5;
+    if (t < 330) return 0x2e8b57;
+    if (t < 700) return 0xd2a24c;
+    return 0xe4572e;
+  }
+
+  const box = document.getElementById("planet3d");
+  const w = box.clientWidth, h = 320;
+  const scene = new THREE.Scene();
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(w, h);
+  box.appendChild(renderer.domElement);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+  const light = new THREE.DirectionalLight(0xffffff, 1);
+  light.position.set(5, 3, 5);
+  scene.add(light);
+
+  const shownR = Math.min(Math.max(radius, 0.4), 5);
+
+  function makeSphere(r, color) {
+    return new THREE.Mesh(
+      new THREE.SphereGeometry(r, 48, 48),
+      new THREE.MeshStandardMaterial({ color: color, roughness: 0.8 })
+    );
+  }
+
+  const earth = makeSphere(1, 0x2f6fdb);
+  const planet = makeSphere(shownR, colorFor(temp));
+
+  const gap = 0.8;
+  const total = 2 + gap + 2 * shownR;
+  earth.position.x = -total / 2 + 1;
+  planet.position.x = -total / 2 + 2 + gap + shownR;
+  scene.add(earth, planet);
+
+  const camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 100);
+  camera.position.z = Math.max(shownR * 3, total * 1.1 / (0.83 * (w / h)));
+
+  function animate() {
+    requestAnimationFrame(animate);
+    earth.rotation.y += 0.005;
+    planet.rotation.y += 0.005;
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  let caption = "This planet is " + radius.toFixed(2) + "x Earth's radius.";
+  if (radius > 5) caption += " (Shown smaller than real size to fit the screen.)";
+  caption += " Colour is based on temperature: icy blue = cold, green = temperate, orange/red = hot.";
+  document.getElementById("planetCaption").textContent = caption;
+</script>
+{% endblock %}

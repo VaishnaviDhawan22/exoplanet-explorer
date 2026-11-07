@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Create account</h2>
+<form method="post" class="mt-3" style="max-width: 400px;">
+  <input name="username" class="form-control mb-3" placeholder="Username" required>
+  <input name="password" type="password" class="form-control mb-3" placeholder="Password (min 6 characters)" required>
+  <button class="btn btn-primary">Sign up</button>
+</form>
+<p class="mt-3">Already have an account? <a class="text-info" href="/login">Log in</a></p>
+{% endblock %}
